@@ -1,4 +1,5 @@
 ﻿using FargowiltasSouls.Toggler;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,19 +26,19 @@ namespace FurgosNohitHelper
 					if (args.Length < 2)
 						throw new Exception("缺少参数1：命名");
 					foreach (List<string> list in CustomSettings)
-						if (AllKeys.Contains(args[1]))
+						if (list[0] == args[1])
 							throw new UsageException("命名重复：删除或更换命名");
 					List<string> SavedCustom = new List<string>();
 					SavedCustom.Add(args[1]);
 					foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
 						if (player.GetToggleValue(toggle))
 							SavedCustom.Add(toggle);
-					if (!Main.dedServ)
-					{
-                        CustomSettingsPath.Put(args[1], SavedCustom);
+                    CustomSettings.Add(SavedCustom);
+                    if (!Main.dedServ)
+					{	
+                        CustomSettingsPath.Put("CustomSettings", CustomSettings);
                         CustomSettingsPath.Save();
                     }
-					AllKeys = CustomSettingsPath.GetAllKeys();
                     break;
 				case "remove":
 					break;
@@ -45,10 +46,20 @@ namespace FurgosNohitHelper
 					CustomSettings.Clear();
 					break;
 				case "all":
-					foreach (string key in AllKeys)
+					if (CustomSettings.Count == 0)
+					{
+						Main.NewText("无保存预设");
+						break;
+					}
+					foreach (List<string> list in CustomSettings)
+					{
+						Main.NewText($"{list[0]}：{list}");
+
+                    }
+					/*foreach (string key in AllKeys)
 					{
 						Main.NewText($"{key}：{CustomSettingsPath.Get<List<string>>(key, null)}");
-					}
+					}*/
 					break;
 				case "load":
 					break;
@@ -61,13 +72,9 @@ namespace FurgosNohitHelper
 		{
 			CustomSettings = new List<List<string>>();
             CustomSettingsPath = new Preferences(path);
-			AllKeys = CustomSettingsPath.GetAllKeys();
+			//AllKeys = CustomSettingsPath.GetAllKeys();
 
-            foreach (string key in AllKeys)
-			{
-				CustomSettings.Add(CustomSettingsPath.Get<List<string>>(key, null));
-			}
-			
+			CustomSettings = CustomSettingsPath.Get("CustomSettings", new List<List<string>>());
         }
 
 		public override void Unload()
@@ -85,6 +92,6 @@ namespace FurgosNohitHelper
 
 		public static Preferences CustomSettingsPath;
 		internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
-		internal static List<string> AllKeys;
+		//internal static List<string> AllKeys;
 	}
 }
