@@ -6,6 +6,10 @@ using System.IO;
 using Terraria;
 using Terraria.IO;
 using Terraria.ModLoader;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Mono.Cecil.Mdb;
+using System.Linq;
 
 namespace FurgosNohitHelper
 {
@@ -25,10 +29,12 @@ namespace FurgosNohitHelper
 				case "save":
 					if (args.Length < 2)
 						throw new Exception("缺少参数1：命名");
-					foreach (List<string> list in CustomSettings)
-						if (list[0] == args[1])
-							throw new UsageException("命名重复：删除或更换命名");
-					List<string> SavedCustom = new List<string>();
+					if (NameCollection.Contains(args[1]))
+						throw new UsageException("命名重复：删除或更换命名");
+					if (ToggleLoader.LoadedToggles.ContainsKey(args[1]))
+                        throw new UsageException("命名请勿与魂石效果选项名重复：删除或更换命名");
+                    List<string> SavedCustom = new List<string>();
+					NameCollection.Add(args[1]);
 					SavedCustom.Add(args[1]);
 					foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
 						if (player.GetToggleValue(toggle))
@@ -37,6 +43,7 @@ namespace FurgosNohitHelper
                     if (!Main.dedServ)
 					{	
                         CustomSettingsPath.Put("CustomSettings", CustomSettings);
+                        CustomSettingsPath.Put("NameCollection", NameCollection);
                         CustomSettingsPath.Save();
                     }
                     break;
@@ -44,22 +51,23 @@ namespace FurgosNohitHelper
 					break;
 				case "clear":
 					CustomSettings.Clear();
+					NameCollection.Clear();
+					if (!Main.dedServ)
+						CustomSettingsPath.Save();
 					break;
 				case "all":
-					if (CustomSettings.Count == 0)
+                    if (CustomSettings.Count == 0)
 					{
 						Main.NewText("无保存预设");
 						break;
 					}
 					foreach (List<string> list in CustomSettings)
 					{
-						Main.NewText($"{list[0]}：{list}");
-
+						Main.NewText($"{list[0]}：{list}"); // WIP
                     }
-					/*foreach (string key in AllKeys)
-					{
-						Main.NewText($"{key}：{CustomSettingsPath.Get<List<string>>(key, null)}");
-					}*/
+					break;
+				case "names":
+					Main.NewText(NameCollection); // WIP
 					break;
 				case "load":
 					break;
@@ -70,16 +78,62 @@ namespace FurgosNohitHelper
 
 		public override void Load()
 		{
-			CustomSettings = new List<List<string>>();
-            CustomSettingsPath = new Preferences(path);
-			//AllKeys = CustomSettingsPath.GetAllKeys();
+            TextReader file = File.OpenText(path);
+			JsonReader reader = new JsonTextReader(file);
+			JsonSerializer jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings() { Formatting = Formatting.Indented });
+			var DeserializeVar = jsonSerializer.Deserialize<Dictionary<string, JArray>>(reader);
 
-			CustomSettings = CustomSettingsPath.Get("CustomSettings", new List<List<string>>());
+            CustomSettingsPath = new Preferences(path);
+
+            NameCollection = new List<string>();
+            CustomSettings = new List<List<string>>();
+
+            foreach (var value in DeserializeVar["NameCollection"].Values())
+			{
+                string val = value.ToString();
+				NameCollection.Add(val);
+			}
+
+            List<string> settingsList = new List<string>();
+            foreach (var value in DeserializeVar["CustomSettings"].Values())
+			{
+				string val = value.ToString();
+				
+				if (NameCollection.Contains(val))
+				{
+                    if (settingsList.Count > 0)
+					{
+                        CustomSettings.Add(settingsList.ToList());
+                        foreach (List<string> list in CustomSettings)
+                        {
+                            foreach (string name in list)
+                                Mod.Logger.Warn(name);
+                        }
+						Mod.Logger.Info("//");
+                    }
+                    settingsList.Clear();
+				}
+                settingsList.Add(val);
+            }
+            CustomSettings.Add(settingsList);
+
+			Mod.Logger.Error(CustomSettings[0][0]);
+			foreach (List<string> list in CustomSettings)
+			{
+				Mod.Logger.Error(list.Count);
+                foreach (string name in list)
+                    Mod.Logger.Error(name);
+            }
+
+            CustomSettingsPath.Put("CustomSettings", CustomSettings);
+            CustomSettingsPath.Put("NameCollection", NameCollection);
+            CustomSettingsPath.Save();
         }
 
 		public override void Unload()
 		{
 			CustomSettings = null;
+			NameCollection = null;
 			CustomSettingsPath = null;
 		}
 
@@ -89,6 +143,7 @@ namespace FurgosNohitHelper
 		} // WIP （先在这画个饼.jpg 
 
 		public List<List<string>> CustomSettings;
+		public List<string> NameCollection;
 
 		public static Preferences CustomSettingsPath;
 		internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
