@@ -1,0 +1,4 @@
+displayName = Furgo的无伤助手（？
+author = Furgo_
+version = 0.1
+modReferences = FargowiltasSouls
