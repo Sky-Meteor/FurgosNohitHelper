@@ -104,26 +104,12 @@ namespace FurgosNohitHelper
                     if (settingsList.Count > 0)
 					{
                         CustomSettings.Add(settingsList.ToList());
-                        foreach (List<string> list in CustomSettings)
-                        {
-                            foreach (string name in list)
-                                Mod.Logger.Warn(name);
-                        }
-						Mod.Logger.Info("//");
                     }
                     settingsList.Clear();
 				}
                 settingsList.Add(val);
             }
             CustomSettings.Add(settingsList);
-
-			Mod.Logger.Error(CustomSettings[0][0]);
-			foreach (List<string> list in CustomSettings)
-			{
-				Mod.Logger.Error(list.Count);
-                foreach (string name in list)
-                    Mod.Logger.Error(name);
-            }
 
             CustomSettingsPath.Put("CustomSettings", CustomSettings);
             CustomSettingsPath.Put("NameCollection", NameCollection);
