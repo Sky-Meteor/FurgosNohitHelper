@@ -107,7 +107,7 @@ namespace FurgosNohitHelper
                 case "station":
                     break;
                 default:
-                    break;
+                    throw new UsageException($"参数{args[0]}错误：不存在指令");
             }
         }
 
