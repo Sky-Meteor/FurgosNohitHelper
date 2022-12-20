@@ -27,7 +27,7 @@ namespace FurgosNohitHelper
 			{
 				case "save":
 					if (args.Length < 2)
-						throw new Exception("缺少参数1：命名");
+						throw new Exception("缺少参数：命名");
 					if (NameCollection.Contains(args[1]))
 						throw new UsageException("命名重复：删除或更换命名");
 					if (ToggleLoader.LoadedToggles.ContainsKey(args[1]))
@@ -72,7 +72,7 @@ namespace FurgosNohitHelper
 				case "load":
 					break;
 				default:
-					throw new UsageException("参数0错误");
+					throw new UsageException($"参数{args[0]}错误：不存在指令");
 			}
 		}
 
