@@ -12,9 +12,9 @@ using Terraria.Localization;
 
 namespace FurgosNohitHelper
 {
-    public class TogglerCommand : ModCommand
+    public class FurgoCommand : ModCommand
     {
-        public override string Command => "toggle";
+        public override string Command => "furgo";
 
         public override CommandType Type => CommandType.Chat;
 
