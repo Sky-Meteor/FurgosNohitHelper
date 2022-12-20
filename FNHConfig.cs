@@ -16,7 +16,7 @@ namespace FurgosNohitHelper
 
         [Header("指令相关选项")]
         [Label("加载魂石选项提示每行显示条数")]
-        [DefaultValue(10)]
+        [DefaultValue(9)]
         public int CommandTogglePerLine;
     }
 }
