@@ -23,79 +23,91 @@ namespace FurgosNohitHelper
             Player player = caller.Player;
             if (args.Length < 1)
                 throw new UsageException("缺少参数");
+
             switch (args[0])
             {
-                case "save":
-                    if (args.Length < 2)
-                        throw new Exception("缺少参数：命名");
-                    if (NameCollection.Contains(args[1]))
-                        throw new UsageException("命名重复：删除或更换命名");
-                    if (ToggleLoader.LoadedToggles.ContainsKey(args[1]))
-                        throw new UsageException("命名请勿与魂石效果选项名重复：更换命名");
-                    List<string> SavedCustom = new List<string>();
-                    NameCollection.Add(args[1]);
-                    SavedCustom.Add(args[1]);
-                    foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
-                        if (player.GetToggleValue(toggle))
-                            SavedCustom.Add(toggle);
-                    CustomSettings.Add(SavedCustom);
-                    SaveIfNotServ();
-                    break;
-                case "remove":
-                    if (args.Length < 2)
-                        throw new Exception("缺少参数：名称");
-                    if (!NameCollection.Contains(args[1]))
-                        throw new UsageException($"参数{args[1]}错误：不存在名称");
-                    foreach (List<string> list in CustomSettings)
+                #region toggle
+                case "toggle":
+                    switch (args[1])
                     {
-                        if (list[0] == args[1])
-                        {
-                            CustomSettings.Remove(list);
-                            NameCollection.Remove(args[1]);
+                        case "save":
+                            if (args.Length < 3)
+                                throw new Exception("缺少参数：命名");
+                            if (NameCollection.Contains(args[2]))
+                                throw new UsageException("命名重复：删除或更换命名");
+                            if (ToggleLoader.LoadedToggles.ContainsKey(args[2]))
+                                throw new UsageException("命名请勿与魂石效果选项名重复：更换命名");
+                            List<string> SavedCustom = new List<string>();
+                            NameCollection.Add(args[2]);
+                            SavedCustom.Add(args[2]);
+                            foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
+                                if (player.GetToggleValue(toggle))
+                                    SavedCustom.Add(toggle);
+                            CustomSettings.Add(SavedCustom);
                             SaveIfNotServ();
                             break;
-                        }
-                    }
-                    break;
-                case "clear":
-                    CustomSettings.Clear();
-                    NameCollection.Clear();
-                    SaveIfNotServ();
-                    break;
-                case "all":
-                    if (CustomSettings.Count == 0)
-                    {
-                        Main.NewText("无保存预设");
-                        break;
-                    }
-                    foreach (List<string> list in CustomSettings)
-                    {
-                        Main.NewText("\n");
-                        Main.NewText(GetNamesFromList(list));
-                    }
-                    break;
-                case "names":
-                    Main.NewText(GetNamesFromList(NameCollection));
-                    break;
-                case "load":
-                    if (args.Length < 2)
-                        throw new Exception("缺少参数：名称");
-                    if (!NameCollection.Contains(args[1]))
-                        throw new UsageException($"参数{args[1]}错误：不存在名称");
-                    foreach (List<string> list in CustomSettings)
-                    {
-                        if (list[0] == args[1])
-                        {
-                            SetAllToggles(player, false);
-                            for (int i = 1; i < list.Count; i++)
-                                player.SetToggleValue(list[i], true);
-                            Main.NewText($"已加载预设：{GetNamesFromList(list)}");
+                        case "remove":
+                            if (args.Length < 3)
+                                throw new Exception("缺少参数：名称");
+                            if (!NameCollection.Contains(args[2]))
+                                throw new UsageException($"参数{args[2]}错误：不存在名称");
+                            foreach (List<string> list in CustomSettings)
+                            {
+                                if (list[0] == args[2])
+                                {
+                                    CustomSettings.Remove(list);
+                                    NameCollection.Remove(args[2]);
+                                    SaveIfNotServ();
+                                    break;
+                                }
+                            }
                             break;
-                        }
+                        case "clear":
+                            CustomSettings.Clear();
+                            NameCollection.Clear();
+                            SaveIfNotServ();
+                            break;
+                        case "all":
+                            if (CustomSettings.Count == 0)
+                            {
+                                Main.NewText("无保存预设");
+                                break;
+                            }
+                            foreach (List<string> list in CustomSettings)
+                            {
+                                Main.NewText("\n");
+                                Main.NewText(GetNamesFromList(list));
+                            }
+                            break;
+                        case "names":
+                            Main.NewText(GetNamesFromList(NameCollection));
+                            break;
+                        case "load":
+                            if (args.Length < 3)
+                                throw new Exception("缺少参数：名称");
+                            if (!NameCollection.Contains(args[2]))
+                                throw new UsageException($"参数{args[2]}错误：不存在名称");
+                            foreach (List<string> list in CustomSettings)
+                            {
+                                if (list[0] == args[2])
+                                {
+                                    SetAllToggles(player, false);
+                                    for (int i = 1; i < list.Count; i++)
+                                        player.SetToggleValue(list[i], true);
+                                    Main.NewText($"已加载预设：{GetNamesFromList(list)}");
+                                    break;
+                                }
+                            }
+                            break;
+                        default:
+                            throw new UsageException($"参数{args[1]}错误：不存在指令");
                     }
+                    break;
+                #endregion
+                case "station":
                     break;
                 default:
-                    throw new UsageException($"参数{args[0]}错误：不存在指令");
+                    break;
             }
         }
 
