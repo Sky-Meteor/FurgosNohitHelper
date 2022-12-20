@@ -12,76 +12,76 @@ using Terraria.Localization;
 
 namespace FurgosNohitHelper
 {
-	public class FurgoCommand : ModCommand
-	{
-		public override string Command => "furgo";
+    public class FurgoCommand : ModCommand
+    {
+        public override string Command => "furgo";
 
-		public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.Chat;
 
-		public override void Action(CommandCaller caller, string input, string[] args)
-		{
-			Player player = caller.Player;
-			if (args.Length < 1)
-				throw new UsageException("缺少参数");
-			switch (args[0])
-			{
-				case "save":
-					if (args.Length < 2)
-						throw new Exception("缺少参数：命名");
-					if (NameCollection.Contains(args[1]))
-						throw new UsageException("命名重复：删除或更换命名");
-					if (ToggleLoader.LoadedToggles.ContainsKey(args[1]))
+        public override void Action(CommandCaller caller, string input, string[] args)
+        {
+            Player player = caller.Player;
+            if (args.Length < 1)
+                throw new UsageException("缺少参数");
+            switch (args[0])
+            {
+                case "save":
+                    if (args.Length < 2)
+                        throw new Exception("缺少参数：命名");
+                    if (NameCollection.Contains(args[1]))
+                        throw new UsageException("命名重复：删除或更换命名");
+                    if (ToggleLoader.LoadedToggles.ContainsKey(args[1]))
                         throw new UsageException("命名请勿与魂石效果选项名重复：删除或更换命名");
                     List<string> SavedCustom = new List<string>();
-					NameCollection.Add(args[1]);
-					SavedCustom.Add(args[1]);
-					foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
-						if (player.GetToggleValue(toggle))
-							SavedCustom.Add(toggle);
+                    NameCollection.Add(args[1]);
+                    SavedCustom.Add(args[1]);
+                    foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
+                        if (player.GetToggleValue(toggle))
+                            SavedCustom.Add(toggle);
                     CustomSettings.Add(SavedCustom);
                     if (!Main.dedServ)
-					{	
+                    {    
                         CustomSettingsPath.Put("CustomSettings", CustomSettings);
                         CustomSettingsPath.Put("NameCollection", NameCollection);
                         CustomSettingsPath.Save();
                     }
                     break;
-				case "remove":
-					break;
-				case "clear":
-					CustomSettings.Clear();
-					NameCollection.Clear();
-					if (!Main.dedServ)
-						CustomSettingsPath.Save();
-					break;
-				case "all":
+                case "remove":
+                    break;
+                case "clear":
+                    CustomSettings.Clear();
+                    NameCollection.Clear();
+                    if (!Main.dedServ)
+                        CustomSettingsPath.Save();
+                    break;
+                case "all":
                     if (CustomSettings.Count == 0)
-					{
-						Main.NewText("无保存预设");
-						break;
-					}
-					foreach (List<string> list in CustomSettings)
-					{
+                    {
+                        Main.NewText("无保存预设");
+                        break;
+                    }
+                    foreach (List<string> list in CustomSettings)
+                    {
                         Main.NewText(GetNamesFromList(list));
                         
                     }
-					break;
-				case "names":
+                    break;
+                case "names":
                     Main.NewText(GetNamesFromList(NameCollection));
-					break;
-				case "load":
-					break;
-				default:
-					throw new UsageException($"参数{args[0]}错误：不存在指令");
-			}
-		}
+                    break;
+                case "load":
+                    break;
+                default:
+                    throw new UsageException($"参数{args[0]}错误：不存在指令");
+            }
+        }
 
-		public override void Load()
-		{
+        public override void Load()
+        {
             TextReader file = File.OpenText(path);
-			JsonReader reader = new JsonTextReader(file);
-			JsonSerializer jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings() { Formatting = Formatting.Indented });
-			var DeserializeVar = jsonSerializer.Deserialize<Dictionary<string, JArray>>(reader);
+            JsonReader reader = new JsonTextReader(file);
+            JsonSerializer jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            var DeserializeVar = jsonSerializer.Deserialize<Dictionary<string, JArray>>(reader);
 
             CustomSettingsPath = new Preferences(path);
 
@@ -89,24 +89,24 @@ namespace FurgosNohitHelper
             CustomSettings = new List<List<string>>();
 
             foreach (var value in DeserializeVar["NameCollection"].Values())
-			{
+            {
                 string val = value.ToString();
-				NameCollection.Add(val);
-			}
+                NameCollection.Add(val);
+            }
 
             List<string> settingsList = new List<string>();
             foreach (var value in DeserializeVar["CustomSettings"].Values())
-			{
-				string val = value.ToString();
-				
-				if (NameCollection.Contains(val))
-				{
+            {
+                string val = value.ToString();
+                
+                if (NameCollection.Contains(val))
+                {
                     if (settingsList.Count > 0)
-					{
+                    {
                         CustomSettings.Add(settingsList.ToList());
                     }
                     settingsList.Clear();
-				}
+                }
                 settingsList.Add(val);
             }
             CustomSettings.Add(settingsList);
@@ -116,15 +116,15 @@ namespace FurgosNohitHelper
             CustomSettingsPath.Save();
         }
 
-		public override void Unload()
-		{
-			CustomSettings = null;
-			NameCollection = null;
-			CustomSettingsPath = null;
-		}
+        public override void Unload()
+        {
+            CustomSettings = null;
+            NameCollection = null;
+            CustomSettingsPath = null;
+        }
 
-		static string GetNamesFromList(List<string> list)
-		{
+        static string GetNamesFromList(List<string> list)
+        {
             if (list.Count == 0)
                 return "";
             string output = $"{list[0]}：";
@@ -143,13 +143,13 @@ namespace FurgosNohitHelper
                 count += 1;
             }
             return output[..(output.Length - 1)];
-		}
+        }
 
-		public List<List<string>> CustomSettings;
-		public List<string> NameCollection;
+        public List<List<string>> CustomSettings;
+        public List<string> NameCollection;
 
-		public Preferences CustomSettingsPath;
-		internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
+        public Preferences CustomSettingsPath;
+        internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
         #region EnchColors
         public readonly static Dictionary<string, string> EnchColors = new()
         {
