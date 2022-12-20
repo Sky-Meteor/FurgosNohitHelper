@@ -28,6 +28,8 @@ namespace FurgosNohitHelper
             {
                 #region toggle
                 case "toggle":
+                    if (args.Length < 2)
+                        throw new Exception("缺少参数：操作名称");
                     switch (args[1])
                     {
                         case "save":
