@@ -1,14 +1,14 @@
 ﻿using FargowiltasSouls.Toggler;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.IO;
-using Terraria.ModLoader;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Linq;
 using Terraria.Localization;
+using Terraria.ModLoader;
 
 namespace FurgosNohitHelper
 {
@@ -115,6 +115,7 @@ namespace FurgosNohitHelper
 
         public override void Load()
         {
+            #region toggle stuff
             TextReader file = File.OpenText(path);
             JsonReader reader = new JsonTextReader(file);
             JsonSerializer jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings() { Formatting = Formatting.Indented });
@@ -151,21 +152,25 @@ namespace FurgosNohitHelper
             CustomSettingsPath.Put("CustomSettings", CustomSettings);
             CustomSettingsPath.Put("NameCollection", NameCollection);
             SaveIfNotServ();
+            #endregion
         }
 
         public override void Unload()
         {
+            #region toggle stuff
             CustomSettings = null;
             NameCollection = null;
             CustomSettingsPath = null;
+            #endregion
         }
 
+        #region toggle stuff
         public List<List<string>> CustomSettings;
         public List<string> NameCollection;
 
         public Preferences CustomSettingsPath;
         internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
-
+        #endregion
         #region Utils
         public static void SetAllToggles(Player player, bool set)
         {
