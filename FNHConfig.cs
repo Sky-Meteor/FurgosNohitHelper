@@ -18,5 +18,10 @@ namespace FurgosNohitHelper
         [Label("加载魂石选项提示每行显示条数")]
         [DefaultValue(9)]
         public int CommandTogglePerLine;
+
+        [Label("是否开启Boss挑战相关指令")]
+        [DefaultValue(false)]
+        [ReloadRequired]
+        public bool EnableBossChallengeCommand;
     }
 }

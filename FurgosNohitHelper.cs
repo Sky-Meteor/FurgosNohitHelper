@@ -9,7 +9,7 @@ namespace FurgosNohitHelper
 	{
         public override void Load()
 		{
-            
+
 		}
 
 		public override void Unload()

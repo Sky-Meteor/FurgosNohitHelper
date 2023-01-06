@@ -1,4 +1,6 @@
-﻿using FargowiltasSouls.Toggler;
+﻿using Fargowiltas.Items.Tiles;
+using FargowiltasSouls;
+using FargowiltasSouls.Toggler;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -21,9 +23,9 @@ namespace FurgosNohitHelper
         public override void Action(CommandCaller caller, string input, string[] args)
         {
             Player player = caller.Player;
+
             if (args.Length < 1)
                 throw new UsageException("缺少参数");
-
             switch (args[0])
             {
                 #region toggle
@@ -106,8 +108,9 @@ namespace FurgosNohitHelper
                     }
                     break;
                 #endregion
+                #region station-wip
                 case "station":
-                    break;
+                #endregion
                 default:
                     throw new UsageException($"参数{args[0]}错误：不存在指令");
             }
