@@ -66,9 +66,9 @@ namespace FurgosNohitHelper
                                 Main.NewText("无保存预设");
                                 break;
                             }
+                            Main.NewText("\n");
                             foreach (string key in CustomSettings.Keys)
                             {
-                                Main.NewText("\n");
                                 Main.NewText($"{key}：{GetNamesFromList(CustomSettings[key].Keys.ToList())}");
                             }
                             break;
