@@ -37,39 +37,28 @@ namespace FurgosNohitHelper
                         case "save":
                             if (args.Length < 3)
                                 throw new Exception("缺少参数：命名");
-                            if (NameCollection.Contains(args[2]))
+                            if (CustomSettings.ContainsKey(args[2]))
                                 throw new UsageException("命名重复：删除或更换命名");
-                            if (ToggleLoader.LoadedToggles.ContainsKey(args[2]))
-                                throw new UsageException("命名请勿与魂石效果选项名重复：更换命名");
-                            List<string> SavedCustom = new List<string>();
-                            NameCollection.Add(args[2]);
-                            SavedCustom.Add(args[2]);
+                            Dictionary<string, bool> SavedCustom = new Dictionary<string, bool>();
                             foreach (string toggle in ToggleLoader.LoadedToggles.Keys)
                                 if (player.GetToggleValue(toggle))
-                                    SavedCustom.Add(toggle);
-                            CustomSettings.Add(SavedCustom);
+                                    SavedCustom.Add(toggle, true);
+                            CustomSettings.Add(args[2], SavedCustom);
                             SaveIfNotServ();
+                            Main.NewText($"{args[2]}保存成功！");
                             break;
                         case "remove":
                             if (args.Length < 3)
                                 throw new Exception("缺少参数：名称");
-                            if (!NameCollection.Contains(args[2]))
+                            if (!CustomSettings.ContainsKey(args[2]))
                                 throw new UsageException($"参数{args[2]}错误：不存在名称");
-                            foreach (List<string> list in CustomSettings)
-                            {
-                                if (list[0] == args[2])
-                                {
-                                    CustomSettings.Remove(list);
-                                    NameCollection.Remove(args[2]);
-                                    SaveIfNotServ();
-                                    break;
-                                }
-                            }
+                            CustomSettings.Remove(args[2]);
+                            Main.NewText($"成功清除预设{args[2]}");
                             break;
                         case "clear":
                             CustomSettings.Clear();
-                            NameCollection.Clear();
                             SaveIfNotServ();
+                            Main.NewText($"已清除所有{CustomSettings.Keys.Count}个预设");
                             break;
                         case "all":
                             if (CustomSettings.Count == 0)
@@ -77,31 +66,25 @@ namespace FurgosNohitHelper
                                 Main.NewText("无保存预设");
                                 break;
                             }
-                            foreach (List<string> list in CustomSettings)
+                            foreach (string key in CustomSettings.Keys)
                             {
                                 Main.NewText("\n");
-                                Main.NewText(GetNamesFromList(list));
+                                Main.NewText($"{key}：{GetNamesFromList(CustomSettings[key].Keys.ToList())}");
                             }
                             break;
                         case "names":
-                            Main.NewText(GetNamesFromList(NameCollection));
+                            foreach (string name in CustomSettings.Keys)
+                                Main.NewText("\n" + name);
                             break;
                         case "load":
                             if (args.Length < 3)
                                 throw new Exception("缺少参数：名称");
-                            if (!NameCollection.Contains(args[2]))
+                            if (!CustomSettings.ContainsKey(args[2]))
                                 throw new UsageException($"参数{args[2]}错误：不存在名称");
-                            foreach (List<string> list in CustomSettings)
-                            {
-                                if (list[0] == args[2])
-                                {
-                                    SetAllToggles(player, false);
-                                    for (int i = 1; i < list.Count; i++)
-                                        player.SetToggleValue(list[i], true);
-                                    Main.NewText($"已加载预设：{GetNamesFromList(list)}");
-                                    break;
-                                }
-                            }
+                            SetAllToggles(player, false);
+                            foreach (string key in CustomSettings[args[2]].Keys)
+                                player.SetToggleValue(key, true);
+                            Main.NewText($"已加载预设{args[2]}：{GetNamesFromList(CustomSettings[args[2]].Keys.ToList())}");
                             break;
                         default:
                             throw new UsageException($"参数{args[1]}错误：不存在指令");
@@ -110,6 +93,7 @@ namespace FurgosNohitHelper
                 #endregion
                 #region station-wip
                 case "station":
+                    break;
                 #endregion
                 default:
                     throw new UsageException($"参数{args[0]}错误：不存在指令");
@@ -119,57 +103,30 @@ namespace FurgosNohitHelper
         public override void Load()
         {
             #region toggle stuff
-            TextReader file = File.OpenText(path);
-            JsonReader reader = new JsonTextReader(file);
-            JsonSerializer jsonSerializer = JsonSerializer.Create(new JsonSerializerSettings() { Formatting = Formatting.Indented });
-            var DeserializeVar = jsonSerializer.Deserialize<Dictionary<string, JArray>>(reader);
 
             CustomSettingsPath = new Preferences(path);
 
-            NameCollection = new List<string>();
-            CustomSettings = new List<List<string>>();
+            CustomSettings = new Dictionary<string, Dictionary<string, bool>>();
 
-            foreach (var value in DeserializeVar["NameCollection"].Values())
-            {
-                string val = value.ToString();
-                NameCollection.Add(val);
-            }
-
-            List<string> settingsList = new List<string>();
-            foreach (var value in DeserializeVar["CustomSettings"].Values())
-            {
-                string val = value.ToString();
-                
-                if (NameCollection.Contains(val))
-                {
-                    if (settingsList.Count > 0)
-                    {
-                        CustomSettings.Add(settingsList.ToList());
-                    }
-                    settingsList.Clear();
-                }
-                settingsList.Add(val);
-            }
-            CustomSettings.Add(settingsList);
+            CustomSettingsPath.Load();
+            CustomSettings = CustomSettingsPath.Get<Dictionary<string, Dictionary<string, bool>>>("CustomSettings", new());
 
             CustomSettingsPath.Put("CustomSettings", CustomSettings);
-            CustomSettingsPath.Put("NameCollection", NameCollection);
             SaveIfNotServ();
             #endregion
         }
-
+                
         public override void Unload()
         {
             #region toggle stuff
+            SaveIfNotServ();
             CustomSettings = null;
-            NameCollection = null;
             CustomSettingsPath = null;
             #endregion
         }
 
         #region toggle stuff
-        public List<List<string>> CustomSettings;
-        public List<string> NameCollection;
+        public Dictionary<string, Dictionary<string, bool>> CustomSettings;
 
         public Preferences CustomSettingsPath;
         internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
@@ -186,9 +143,9 @@ namespace FurgosNohitHelper
         {
             if (list.Count == 0)
                 return "";
-            string output = $"{list[0]}：";
+            string output = "";
             int count = 0;
-            for (int i = 1; i < list.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
                 if (count >= ModContent.GetInstance<FNHConfig>().CommandTogglePerLine)
                 {
