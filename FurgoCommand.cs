@@ -1,8 +1,4 @@
-﻿using Fargowiltas.Items.Tiles;
-using FargowiltasSouls;
-using FargowiltasSouls.Toggler;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using FargowiltasSouls.Toggler;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,6 +49,7 @@ namespace FurgosNohitHelper
                             if (!CustomSettings.ContainsKey(args[2]))
                                 throw new UsageException($"参数{args[2]}错误：不存在名称");
                             CustomSettings.Remove(args[2]);
+                            SaveIfNotServ();
                             Main.NewText($"成功清除预设{args[2]}");
                             break;
                         case "clear":
@@ -105,7 +102,6 @@ namespace FurgosNohitHelper
         public override void Load()
         {
             #region toggle stuff
-
             CustomSettingsPath = new Preferences(path);
 
             CustomSettings = new Dictionary<string, Dictionary<string, bool>>();
