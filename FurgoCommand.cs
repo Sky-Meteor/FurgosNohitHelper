@@ -56,9 +56,12 @@ namespace FurgosNohitHelper
                             Main.NewText($"成功清除预设{args[2]}");
                             break;
                         case "clear":
+                            int count = CustomSettings.Keys.Count;
+                            if (count == 0)
+                                Main.NewText("无保存预设");
                             CustomSettings.Clear();
                             SaveIfNotServ();
-                            Main.NewText($"已清除所有{CustomSettings.Keys.Count}个预设");
+                            Main.NewText($"已清除所有{count}个预设");
                             break;
                         case "all":
                             if (CustomSettings.Count == 0)
