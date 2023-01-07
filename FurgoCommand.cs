@@ -93,7 +93,6 @@ namespace FurgosNohitHelper
                 #endregion
                 #region station-wip
                 case "station":
-                    break;
                 #endregion
                 default:
                     throw new UsageException($"参数{args[0]}错误：不存在指令");
