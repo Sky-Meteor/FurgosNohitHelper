@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Ionic.Zlib;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace FurgosNohitHelper.BossChallengeCommands
         public abstract string Cmd { get; }
 
         public override string Command => Cmd;
+
+        public sealed override string Usage => $"/{Cmd} save保存配置，/{Cmd} load加载配置";
 
         #region Utils
         public static void ClearInventory(Player player)
@@ -194,6 +197,40 @@ namespace FurgosNohitHelper.BossChallengeCommands
         }
         public static bool IsVanillaItem(int type) => type < Main.maxItemTypes;
         public static bool IsVanillaItem(Item item) => item.type < Main.maxItemTypes;
+        protected void EasyLoadInventoryAndEquipments(ref Dictionary<int, Tuple<string, int>> SavedInventory, ref Dictionary<int, string> SavedEquipments)
+        {
+            SavedInventory = BossSavePath.Get<Dictionary<int, Tuple<string, int>>>($"{Cmd}/inv", new());
+            BossSavePath.Put($"{Cmd}/inv", SavedInventory);
+            SavedEquipments = BossSavePath.Get<Dictionary<int, string>>($"{Cmd}/equip", new());
+            BossSavePath.Put($"{Cmd}/equip", SavedEquipments);
+        }
+        protected void EasyRegisterAction(CommandCaller caller, string input, string[] args, ref Dictionary<int, Tuple<string, int>> SavedInventory, ref Dictionary<int, string> SavedEquipments)
+        {
+            Player player = caller.Player;
+            if (args.Length < 1)
+            {
+                Main.NewText(Usage);
+                return;
+            }
+            switch (args[0])
+            {
+                case "save":
+                    SavedInventory = SaveInventory(player);
+                    SaveIfNotServ("ks/inv", SavedInventory);
+                    SavedEquipments = SaveEquipments(player);
+                    SaveIfNotServ("ks/equip", SavedEquipments);
+                    Main.NewText("保存成功");
+                    break;
+                case "load":
+                    LoadInventory(player, SavedInventory);
+                    LoadEquipments(player, SavedEquipments);
+                    Main.NewText("加载成功");
+                    break;
+                default:
+                    Main.NewText(Usage);
+                    return;
+            }
+        }
         protected void SaveIfNotServ()
         {
             if (!Main.dedServ)
