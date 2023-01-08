@@ -24,13 +24,15 @@ namespace FurgosNohitHelper.BossChallengeCommands
             switch (args[0])
             {
                 case "save":
-                    SavedItems = SaveInventory(player);
-                    SaveIfNotServ("ks", SavedItems);
+                    SavedInventory = SaveInventory(player);
+                    SaveIfNotServ("ks/inv", SavedInventory);
+                    SavedEquipments = SaveEquipments(player);
+                    SaveIfNotServ("ks/equip", SavedEquipments);
                     Main.NewText("保存成功");
                     break;
                 case "load":
-                    //ClearInventoryAndEquipments(player);
-                    LoadInventory(player, SavedItems);
+                    LoadInventory(player, SavedInventory);
+                    LoadEquipments(player, SavedEquipments);
                     Main.NewText("加载成功");
                     break;
                 default:
@@ -40,14 +42,18 @@ namespace FurgosNohitHelper.BossChallengeCommands
         }
         public override void OnLoad()
         {
-            SavedItems = BossSavePath.Get<Dictionary<int, Tuple<string, int>>>("ks", new());
-            BossSavePath.Put("ks", SavedItems);
+            SavedInventory = BossSavePath.Get<Dictionary<int, Tuple<string, int>>>("ks/inv", new());
+            BossSavePath.Put("ks/inv", SavedInventory);
+            SavedEquipments = BossSavePath.Get<Dictionary<int, string>>("ks/equip", new());
+            BossSavePath.Put("ks/equip", SavedEquipments);
         }
         public override void OnUnload()
         {
-            SavedItems = null;
+            SavedInventory = null;
+            SavedEquipments = null;
         }
 
-        Dictionary<int, Tuple<string, int>> SavedItems;
+        Dictionary<int, Tuple<string, int>> SavedInventory;
+        Dictionary<int, string> SavedEquipments;
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Terraria;
 using Terraria.IO;
 using Terraria.ModLoader;
@@ -66,6 +68,32 @@ namespace FurgosNohitHelper.BossChallengeCommands
             }
             return retVal;
         }
+        public static Dictionary<int, string> SaveEquipments(Player player)
+        {
+            Dictionary<int, string> retVal = new Dictionary<int, string>();
+            int armorCount = player.armor.Length;
+            int miscEquipCount = player.miscEquips.Length;
+            for (int i = 0; i < armorCount + miscEquipCount; i++)
+            {
+                Item item = new Item();
+                if (IsArmorOtherwiseMisc(i))
+                    item = player.armor[RealIndexOfArmorOrMisc(i)];
+                else
+                    item = player.miscEquips[RealIndexOfArmorOrMisc(i)];
+                int type = item.type;
+                string registerString = type.ToString();
+                if (!IsVanillaItem(type))
+                {
+                    ModItem modItem = ModContent.GetModItem(type);
+                    registerString = $"{modItem.Mod.Name}/{modItem.Name}";
+                }
+                retVal.Add(i, registerString);
+            }
+            return retVal;
+
+            bool IsArmorOtherwiseMisc(int index) => index < armorCount;
+            int RealIndexOfArmorOrMisc(int index) => IsArmorOtherwiseMisc(index) ? index : index - armorCount;
+        }
         public static void LoadInventory(Player player, Dictionary<int, Tuple<string, int>> savedInventory)
         {
             foreach (KeyValuePair<int, Tuple<string, int>> itemInfo in savedInventory)
@@ -73,12 +101,11 @@ namespace FurgosNohitHelper.BossChallengeCommands
                 int index = itemInfo.Key;
                 string typeOrItemName = itemInfo.Value.Item1;
                 int stack = itemInfo.Value.Item2;
-                Item item = player.inventory[index];
                 if (int.TryParse(typeOrItemName, out int type))
                 {
                     if (type == 0)
                     {
-                        item.TurnToAir();
+                        player.inventory[index].TurnToAir();
                         continue;
                     }
                     player.inventory[index] = new Item(type, stack);
@@ -106,6 +133,63 @@ namespace FurgosNohitHelper.BossChallengeCommands
                         continue;
                     }
                 }
+            }
+        }
+        public static void LoadEquipments(Player player, Dictionary<int, string> savedEquipments)
+        {
+            int armorCount = player.armor.Length;
+
+            foreach (KeyValuePair<int, string> itemInfo in savedEquipments)
+            {
+                int index = itemInfo.Key;
+                string typeOrItemName = itemInfo.Value;
+                Item item = new Item();
+                if (int.TryParse(typeOrItemName, out int type))
+                {
+                    if (type == 0)
+                    {
+                        if (IsArmorOtherwiseMisc(index))
+                            player.armor[RealIndexOfArmorOrMisc(index)].TurnToAir();
+                        else
+                            player.miscEquips[RealIndexOfArmorOrMisc(index)].TurnToAir();
+                        continue;
+                    }
+                    LoadArmorOrMisc(new Item(type), index);
+                }
+                else
+                {
+                    string[] modNamePair = typeOrItemName.Split("/");
+                    string modName = modNamePair[0];
+                    if (ModLoader.TryGetMod(modName, out Mod mod))
+                    {
+                        string itemName = modNamePair[1];
+                        if (mod.TryFind(itemName, out ModItem modItem))
+                        {
+                            LoadArmorOrMisc(new Item(modItem.Type), index);
+                        }
+                        else
+                        {
+                            Main.NewText($"找不到原位于{(IsArmorOtherwiseMisc(index) ? (IsArmorOtherwiseVanities(index) ? "装备" : "装饰") : "杂项类饰品")}栏第{RealIndexOfArmorOrMisc(index) + 1}位的物品：{itemName}（所属Mod：{modName}），跳过加载此物品");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        Main.NewText($"原位于{(IsArmorOtherwiseMisc(index) ? (IsArmorOtherwiseVanities(index) ? "装备" : "装饰") : "杂项类饰品")}栏第{RealIndexOfArmorOrMisc(index) + 1}位的物品所属的Mod：{modName}未被加载，跳过加载此物品");
+                        continue;
+                    }
+                }
+            }
+
+            bool IsArmorOtherwiseVanities(int index) => index < armorCount / 2;
+            bool IsArmorOtherwiseMisc(int index) => index < armorCount;
+            int RealIndexOfArmorOrMisc(int index) => IsArmorOtherwiseMisc(index) ? index : index - armorCount;
+            void LoadArmorOrMisc(Item item, int index)
+            {
+                if (IsArmorOtherwiseMisc(index))
+                    player.armor[RealIndexOfArmorOrMisc(index)] = item;
+                else
+                    player.miscEquips[RealIndexOfArmorOrMisc(index)] = item;
             }
         }
         public static bool IsVanillaItem(int type) => type < Main.maxItemTypes;
