@@ -104,8 +104,6 @@ namespace FurgosNohitHelper
             #region toggle stuff
             CustomSettingsPath = new Preferences(path);
 
-            CustomSettings = new Dictionary<string, Dictionary<string, bool>>();
-
             CustomSettingsPath.Load();
             CustomSettings = CustomSettingsPath.Get<Dictionary<string, Dictionary<string, bool>>>("CustomSettings", new());
 
@@ -126,7 +124,7 @@ namespace FurgosNohitHelper
         #region toggle stuff
         public Dictionary<string, Dictionary<string, bool>> CustomSettings;
 
-        public Preferences CustomSettingsPath;
+        Preferences CustomSettingsPath;
         internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_CustomSettings.json");
         #endregion
         #region Utils

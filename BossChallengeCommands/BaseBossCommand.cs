@@ -49,22 +49,72 @@ namespace FurgosNohitHelper.BossChallengeCommands
             ClearInventory(player);
             ClearEquipments(player, clearVanities);
         }
-        public static Dictionary<int, Tuple<int, Tuple<int, string>>> SaveInventory(Player player)
+        public static Dictionary<int, Tuple<string, int>> SaveInventory(Player player)
         {
-            Dictionary<int, Tuple<int, Tuple<int, string>>> retVal = new Dictionary<int, Tuple<int, Tuple<int, string>>>();
+            Dictionary<int, Tuple<string, int>> retVal = new Dictionary<int, Tuple<string, int>>();
             for (int i = 0; i < player.inventory.Length; i++)
             {
                 Item item = player.inventory[i];
                 int type = item.type;
-                string internalName = "TerrariaItem";
-                if (type >= Main.maxItemTypes)
-                    internalName = item.ModItem.Name;
-                retVal.Add(i, new Tuple<int, Tuple<int, string>>(type, new Tuple<int, string>(item.stack, internalName)));
+                string registerString = type.ToString();
+                if (!IsVanillaItem(type))
+                {
+                    ModItem modItem = ModContent.GetModItem(type);
+                    registerString = $"{modItem.Mod.Name}/{modItem.Name}";
+                }
+                retVal.Add(i, new Tuple<string, int>(registerString, item.stack));
             }
             return retVal;
         }
+        public static void LoadInventory(Player player, Dictionary<int, Tuple<string, int>> savedInventory)
+        {
+            foreach (KeyValuePair<int, Tuple<string, int>> itemInfo in savedInventory)
+            {
+                int index = itemInfo.Key;
+                string typeOrItemName = itemInfo.Value.Item1;
+                int stack = itemInfo.Value.Item2;
+                Item item = player.inventory[index];
+                if (int.TryParse(typeOrItemName, out int type))
+                {
+                    item.type = type;
+                    item.stack = stack;
+                }
+                else
+                {
+                    string[] modNamePair = typeOrItemName.Split("/");
+                    string modName = modNamePair[0];
+                    if (ModLoader.TryGetMod(modName, out Mod mod))
+                    {
+                        string itemName = modNamePair[1];
+                        if (mod.TryFind(itemName, out ModItem modItem))
+                        {
+                            item.type = modItem.Type;
+                            item.stack = stack;
+                        }
+                        else
+                        {
+                            Main.NewText($"找不到原位于物品栏第{index + 1}位的物品：{itemName}（所属Mod：{modName}），跳过加载此物品");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        Main.NewText($"原位于物品栏第{index + 1}位的物品所属的Mod：{modName}未被加载，跳过加载此物品");
+                        continue;
+                    }
+                }
+            }
+        }
+        public static bool IsVanillaItem(int type) => type < Main.maxItemTypes;
+        public static bool IsVanillaItem(Item item) => item.type < Main.maxItemTypes;
         protected void SaveIfNotServ()
         {
+            if (!Main.dedServ)
+                BossSavePath.Save();
+        }
+        protected void SaveIfNotServ(string name, object value)
+        {
+            BossSavePath.Put(name, value);
             if (!Main.dedServ)
                 BossSavePath.Save();
         }
@@ -91,7 +141,7 @@ namespace FurgosNohitHelper.BossChallengeCommands
             BossSavePath = null;
         }
 
-        public Preferences BossSavePath;
+        protected Preferences BossSavePath;
 
         internal static string path = Path.Combine(Main.SavePath, "ModConfigs", "FurgosNohitHelper_BossCustoms.json");
     }
