@@ -30,7 +30,6 @@ namespace FurgosNohitHelper.BossChallengeCommands
                     break;
                 case "load":
                     //ClearInventoryAndEquipments(player);
-                    ClearInventory(player);
                     LoadInventory(player, SavedItems);
                     Main.NewText("加载成功");
                     break;

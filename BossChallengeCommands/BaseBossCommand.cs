@@ -76,8 +76,12 @@ namespace FurgosNohitHelper.BossChallengeCommands
                 Item item = player.inventory[index];
                 if (int.TryParse(typeOrItemName, out int type))
                 {
-                    item.type = type;
-                    item.stack = stack;
+                    if (type == 0)
+                    {
+                        item.TurnToAir();
+                        continue;
+                    }
+                    player.inventory[index] = new Item(type, stack);
                 }
                 else
                 {
@@ -88,8 +92,7 @@ namespace FurgosNohitHelper.BossChallengeCommands
                         string itemName = modNamePair[1];
                         if (mod.TryFind(itemName, out ModItem modItem))
                         {
-                            item.type = modItem.Type;
-                            item.stack = stack;
+                            player.inventory[index] = new Item(modItem.Type, stack);
                         }
                         else
                         {
