@@ -148,7 +148,7 @@ namespace FurgosNohitHelper
                     output += "\n";
                     count = 0;
                 }
-                string text = LocalizationLoader.GetOrCreateTranslation(ModLoader.GetMod("FargowiltasSouls"), $"{list[i]}Config").GetTranslation(Language.ActiveCulture);
+                string text = LocalizationLoader.GetOrCreateTranslation(FurgosNohitHelper.FargoSouls, $"{list[i]}Config").GetTranslation(Language.ActiveCulture);
                 string key = text[text.IndexOf("{")..(text.IndexOf("}") + 1)];
                 text = text.Replace(key, Language.GetTextValue(key[2..(key.Length - 1)]));
                 output += $"{text}，";

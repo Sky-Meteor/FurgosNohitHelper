@@ -7,6 +7,7 @@ namespace FurgosNohitHelper
 {
 	public class FurgosNohitHelper : Mod
 	{
+        public static Mod FargoSouls => ModLoader.GetMod("FargowiltasSouls");
         public override void Load()
 		{
 
