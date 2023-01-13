@@ -197,14 +197,14 @@ namespace FurgosNohitHelper.BossChallengeCommands
         }
         public static bool IsVanillaItem(int type) => type < Main.maxItemTypes;
         public static bool IsVanillaItem(Item item) => item.type < Main.maxItemTypes;
-        protected void EasyLoadInventoryAndEquipments(ref Dictionary<int, Tuple<string, int>> SavedInventory, ref Dictionary<int, string> SavedEquipments)
+        protected void EasyLoadInventoryAndEquipments(ref Dictionary<string, Dictionary<int, Tuple<string, int>>> SavedInventory, ref Dictionary<string, Dictionary<int, string>> SavedEquipments)
         {
-            SavedInventory = BossSavePath.Get<Dictionary<int, Tuple<string, int>>>($"{Cmd}/inv", new());
-            BossSavePath.Put($"{Cmd}/inv", SavedInventory);
-            SavedEquipments = BossSavePath.Get<Dictionary<int, string>>($"{Cmd}/equip", new());
-            BossSavePath.Put($"{Cmd}/equip", SavedEquipments);
+            SavedInventory[Cmd] = BossSavePath.Get<Dictionary<int, Tuple<string, int>>>($"{Cmd}/inv", new());
+            BossSavePath.Put($"{Cmd}/inv", SavedInventory[Cmd]);
+            SavedEquipments[Cmd] = BossSavePath.Get<Dictionary<int, string>>($"{Cmd}/equip", new());
+            BossSavePath.Put($"{Cmd}/equip", SavedEquipments[Cmd]);
         }
-        protected void EasyRegisterAction(CommandCaller caller, string input, string[] args, ref Dictionary<int, Tuple<string, int>> SavedInventory, ref Dictionary<int, string> SavedEquipments)
+        protected void EasyRegisterAction(CommandCaller caller, string input, string[] args, ref Dictionary<string, Dictionary<int, Tuple<string, int>>> SavedInventory, ref Dictionary<string, Dictionary<int, string>> SavedEquipments)
         {
             Player player = caller.Player;
             if (args.Length < 1)
@@ -215,15 +215,15 @@ namespace FurgosNohitHelper.BossChallengeCommands
             switch (args[0])
             {
                 case "save":
-                    SavedInventory = SaveInventory(player);
-                    SaveIfNotServ("ks/inv", SavedInventory);
-                    SavedEquipments = SaveEquipments(player);
-                    SaveIfNotServ("ks/equip", SavedEquipments);
+                    SavedInventory[Cmd] = SaveInventory(player);
+                    SaveIfNotServ($"{Cmd}/inv", SavedInventory[Cmd]);
+                    SavedEquipments[Cmd] = SaveEquipments(player);
+                    SaveIfNotServ($"{Cmd}/equip", SavedEquipments[Cmd]);
                     Main.NewText("保存成功");
                     break;
                 case "load":
-                    LoadInventory(player, SavedInventory);
-                    LoadEquipments(player, SavedEquipments);
+                    LoadInventory(player, SavedInventory[Cmd]);
+                    LoadEquipments(player, SavedEquipments[Cmd]);
                     Main.NewText("加载成功");
                     break;
                 default:
@@ -243,13 +243,21 @@ namespace FurgosNohitHelper.BossChallengeCommands
                 BossSavePath.Save();
         }
         #endregion
+        public override void Action(CommandCaller caller, string input, string[] args)
+        {
+            EasyRegisterAction(caller, input, args, ref SavedInventory, ref SavedEquipments);
+        }
+
         public virtual void OnLoad()
         {
-            
+            SavedInventory = new Dictionary<string, Dictionary<int, Tuple<string, int>>>();
+            SavedEquipments = new Dictionary<string, Dictionary<int, string>>();
+            EasyLoadInventoryAndEquipments(ref SavedInventory, ref SavedEquipments);
         }
         public virtual void OnUnload()
         {
-            
+            SavedInventory = null;
+            SavedEquipments = null;
         }
         public sealed override void Load()
         {
@@ -264,6 +272,9 @@ namespace FurgosNohitHelper.BossChallengeCommands
             OnUnload();
             BossSavePath = null;
         }
+
+        Dictionary<string, Dictionary<int, Tuple<string, int>>> SavedInventory;
+        Dictionary<string, Dictionary<int, string>> SavedEquipments;
 
         protected Preferences BossSavePath;
 
