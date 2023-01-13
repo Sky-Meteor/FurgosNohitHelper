@@ -5,7 +5,7 @@
         public override string Cmd => "ks";
     }
 
-    public class EyeOfCtuhulhuCommand : BaseBossCommand
+    public class EyeOfCthulhuCommand : BaseBossCommand
     {
         public override string Cmd => "eoc";
     }
